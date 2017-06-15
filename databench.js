@@ -1,10 +1,23 @@
 // parser
 
+var openweatherUrl = "http://api.openweathermap.org/data/2.5/weather?q=Aix-en-Provence&mode=json&appid=5514217a60117d773851987cbb7b5fae"
+		
 function generate() {
 	document.getElementById("dump").innerHTML = "";
 	var conditionText = "";
 	var conditions;
-	
+	//getWeather2();
+	var weather = null
+	 getWeather().then(function(response) {
+		
+		weather = eval(response);
+		console.log(weather);
+		
+ 	}, function(Error) {
+    	console.log("get weather error: "+Error);
+   	});
+  	
+  	
 	readTextFile("conditions.txt").then(function(response) {
 		//console.log(response);
 		conditionText = response;
@@ -14,6 +27,7 @@ function generate() {
 	}, function(Error) {
    		console.log(Error);
 	});
+	
 	
 	getData().then(function(response) {
 		
@@ -28,6 +42,8 @@ function generate() {
 		data.month = data.date.getMonth();
 		data.year = data.date.getFullYear();
 		
+		data.windSpeed = weather.wind.speed;
+		data.sky = weather.weather[0].main;
 		console.log(data);
 		for (var i = 0; i < conditions.length; i++) {
 			var t = conditions[i];//"[peopleCount==2] le {bleu|rouge|vert}, est une chouette couleur.";
@@ -122,7 +138,25 @@ function getData() {
 	});
 }
 // end parser
+// var getWeather = function() {
+//     gettingData = true;
+//     var requestString = openweatherUrl;
+//     
+//     request = new XMLHttpRequest();
+//     //request.setRequestHeader("Content-type", "application/x-www-form-urlencoded;charset=UTF-8"); // json header
+// 		
+// 	
+//     request.onload = proccessResults;
+//     request.open("get", requestString, true);
+//     request.send(null);
+// };
 
+var proccessResults = function() {
+    console.log(this);
+    var results = JSON.parse(this.responseText);
+    console.log(results);
+  };
+  
 function sendData() {
 	// recuperation des donnés de la page html
 	var humidity = document.getElementById('humidity').value;
@@ -221,6 +255,42 @@ function dumpData() {
 			}
 		}
 	}
+}
+
+function getWeather() {
+
+	return new Promise(function(resolve, reject) {
+		var xmlHttp = null;
+
+		xmlHttp = new XMLHttpRequest();
+		xmlHttp.open("GET",openweatherUrl, true);
+		
+		xmlHttp.onerror = function() {
+      		reject(Error('There was a network error.'));
+      		console.log("error");
+    	}
+    	
+    	xmlHttp.onload = function() {
+      		if (xmlHttp.status === 200) {
+      			var json = null;
+
+				try {
+					json = JSON.parse(xmlHttp.responseText);
+				} catch (err) {
+					console.log("error json parse "+ err);
+					console.log(xmlHttp.responseText);
+					reject(Error('JSON parse error.'));
+				}
+				console.log("weather here");
+				resolve(json);
+				
+      		} else {
+      			console.log("weather network error");
+      			reject(Error('Network error:' + xmlHttp.statusText))
+      		}
+      	}
+      	xmlHttp.send(null);
+	});
 }
 
 function readTextFile(file) {
