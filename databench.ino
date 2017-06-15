@@ -34,7 +34,7 @@ Ticker ticker;
 
 const char* ssid     = "Atelier_Hypermedias";
 const char* password = "pas_de_clef_wifi";
-const char* host = "www.stagnaro.net";
+const char* host = "databench.fr";
 
 void syncData(float _humidity,
               float _soundVolume,
@@ -191,7 +191,7 @@ void syncData(float _humidity,
   }
 
   // We now create a URI for the request
-  String url = "/databench/databench.php?feed=true";
+  String url = "/databench.php?feed=true";
 
   Serial.print("Requesting URL: ");
   Serial.println(url);
