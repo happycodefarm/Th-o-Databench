@@ -1,4 +1,4 @@
-// $year, $month, $day, $hour, $minute, $peopleCount, $humidity, $soundVolume, $windSpeed, $temperature, $raining, $places
+// $year, $month, $day, $hour, $minute, $peopleCount, $humidity, $soundVolume, $windSpeed, $temperature, $raining, $places, $sky
 
 [$humidity==0] Se lève pour quitter le confort qu'apporte le dos de l'assise., pensant être seul c'est le silence qui t'accompagne
 
