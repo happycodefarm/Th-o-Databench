@@ -1,0 +1,28 @@
+[$humidity==0] Se lève pour quitter le confort qu'apporte le dos de l'assise., pensant être seul c'est le silence qui t'accompagne
+
+[$peopleCount == 2]{FOO|BAR|PLUS} un seul <b>être</b> la solitaire existance cette espace à seul l'être solitaire , qui encore as besoin de la pause offerte en ce lieu.</br> 
+[$peopleCount == 1]{peopleCount} un seul être la solitaire existance cette espace à seul l'être solitaire , qui encore as besoin de la pause offerte en ce lieu.
+[$peopleCount == 2]{FOO|BAR|PLUS} blabla.</br>
+[$hour >5 && $peopleCount>1] Hello Workd</br>
+[interaction == "lever"] Après s'être posé, la personne reprend la suite du quotidiens. 
+[volumeaudio == "high"] Le bruit du proche entourage ne perturbe pas la pause de celui qui est assis ici. 
+
+[momentJour == "nuit"] Les soirées d'été se prolongent et avec elles les instants paisible de repos. 
+[momentJour == "nuit"] La température descend et comme sur une balance équilibrée les astres montent.
+
+[temperature >= 31] Les Hautes températures invitent à s’asseoir. 
+[temps == "doux"] Le temps doux d'un entre-saison accueil tous ceux qui savent attendre. 
+
+[placement == "extremité"] Les rebords aux extrémités de la longueur sont les places qu'offrent un entre deux... 
+[placement == "extremité"] L'assise en bord place en incertitudes entre un là et un ailleurs. 
+[placement == "centre"] Le milieu centre entre deux potentialités, une à gauche et une à droite, seul à deux ou à plusieurs. 
+[hour > 10 && peopleCount ==2] 
+//[12  14] Souvent en ces heures, il est bon se nourrir d'un repas comme d'un repos.
+//[6 @ 9] Souvent en ces heures, c'est la sortie du repos et il est bon de faire doucement.
+//[9 @ 12] Les première heures d'une journée sont partie, s'entame les prochaines dans le rythme perpétuel de la marche humaine.Ce sont {personnes} qui se retrouvent dans le confort des frontières invisible qui les séparent. 
+[personnes == 2] assise dans une bulle comme deux inconnus contraint à la compagnie. 
+[personnes += 1] Tu es là pensant être seul un autre te rejoint.
+[personnes += 1] Dans des pensées profondes qu'un autre interrompit.
+[personnes == 1] {Voila|Donc|Et} tu es là, pensant être seul c'est le silence qui t'accompagne.
+[personnes == -1] {Se lève pour quitter le confort qu'apporte le dos de l'assise.| pensant être seul c'est le silence qui t'accompagne}
+[momentJour == "couché de soleil"] {phraseAléatoire} Plus longue {devrait être, sont} les pauses quand les raies de lumières ne touchent plus que le haut des choses.
