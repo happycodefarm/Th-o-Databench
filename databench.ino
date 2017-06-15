@@ -1,14 +1,27 @@
 /***************************************************
-  Simple example of reading the MCP3008 analog input channels and printing
-  them all out.
+  Databench ESP12E code
+  MCP3008 spi
+  DHT sensor 1 wire
 
-  Author: Carter Nelson
-  License: Public Domain
+  Author: Guillaume Stagnaro
+  License: WTFPL (Do What the Fuck You Want To Public License)
 ****************************************************/
 
 #include <Adafruit_MCP3008.h>
 #include "DHT.h"
 #include <Ticker.h>
+#include <ESP8266WiFi.h>
+
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  (byte & 0x80 ? '1' : '0'), \
+  (byte & 0x40 ? '1' : '0'), \
+  (byte & 0x20 ? '1' : '0'), \
+  (byte & 0x10 ? '1' : '0'), \
+  (byte & 0x08 ? '1' : '0'), \
+  (byte & 0x04 ? '1' : '0'), \
+  (byte & 0x02 ? '1' : '0'), \
+  (byte & 0x01 ? '1' : '0')
 
 Adafruit_MCP3008 adc0;
 Adafruit_MCP3008 adc1;
@@ -19,32 +32,46 @@ DHT dht(DHTPIN, DHTTYPE);
 
 Ticker ticker;
 
-const char* ssid     = "Flatland SE";
-const char* password = "allYourBase";
+const char* ssid     = "Atelier_Hypermedias";
+const char* password = "pas_de_clef_wifi";
 const char* host = "www.stagnaro.net";
 
-void syncData(float humidity,
-              int soundVolume,
-              int peopleCount,
-              int windSpeed,
-              float temperature,
-              int raining,
-              int place);
+void syncData(float _humidity,
+              float _soundVolume,
+              int _peopleCount,
+              int _windSpeed,
+              float _temperature,
+              int _raining,
+              int _places);
 
+void sync();
+
+int soundVolumeReadings[256] = {0};
+int totalSoundVolume = 0;
+
+unsigned char soundVolumeReadingsIndex = 0;
+
+float humidity = 0;
+float soundVolume = 0;
+int peopleCount = 0;
+int windSpeed = 0;
+float temperature = 0;
+int raining = 0;
+int places = 0;
+int lastPlaces = 0;
 
 void setup() {
   Serial.begin(9600);
   //while (!Serial);
 
-  Serial.println("MCP3008 simple test.");
-  //pinMode(2, OUTPUT);
-  // Hardware SPI (specify CS, use any available digital)
-  // Can use defaults if available, ex: UNO (SS=10) or Huzzah (SS=15)
-  adc0.begin(2);
-  adc1.begin(0);
+  Serial.println("Hello World !");
+
+  adc0.begin(2); // first mcp3008
+  adc1.begin(0); // second mcp3008
   dht.begin();
 
 
+  // connect to wifi network
   Serial.println();
   Serial.println();
   Serial.print("Connecting to ");
@@ -65,51 +92,92 @@ void setup() {
 }
 
 void loop() {
-  //for (int chan=0; chan<8; chan++) {
-  //  Serial.print(adc.readADC(chan)); Serial.print("\t");
-  ///}
+
+/*  syncData(humidity,
+           soundVolume,
+           peopleCount,
+           windSpeed,
+           temperature,
+           raining,
+           places);*/
 
 
-  float h = dht.readHumidity();
+  // Read humidity
+  humidity = dht.readHumidity();
   // Read temperature as Celsius (the default)
-  float t = dht.readTemperature();
+  temperature = dht.readTemperature();
 
-  if (isnan(h) || isnan(t)) {
+  if (isnan(humidity) || isnan(temperature)) {
     Serial.println("Failed to read from DHT sensor!");
-
-  } else {
-
-    Serial.print("h: ");
-    Serial.print(h);
-    Serial.print("%\t");
-    Serial.print("t: ");
-    Serial.print(t);
-    Serial.print("*C\t");
+    humidity = 0;
+    temperature = 0;
   }
 
-  for (int chan = 0; chan < 7; chan++) { // places
-    int val = adc0.readADC(chan);
-    Serial.print(val);
-    Serial.print("\t");
+  Serial.print("h: ");
+  Serial.print(humidity);
+  Serial.print("%\t");
+  Serial.print("t: ");
+  Serial.print(temperature);
+  Serial.print("*C\t");
+
+  // read LDRs values for people counting
+  int ldrCeil = 300;
+  places = 0;
+
+  for (int chan = 0; chan < 7; chan++) { // Placess
+    boolean val = adc0.readADC(chan) < ldrCeil;
+    places |= val << chan;
+  }
+  
+  Serial.print("p count: ");
+  //Serial.print(peopleBitMask, BIN);
+  Serial.printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(places));
+  Serial.print("\t");
+
+  // here we smooth the sound volume values
+  totalSoundVolume -= soundVolumeReadings[soundVolumeReadingsIndex];
+  soundVolumeReadings[soundVolumeReadingsIndex] = adc1.readADC(7); // sound
+  totalSoundVolume += soundVolumeReadings[soundVolumeReadingsIndex];
+  soundVolumeReadingsIndex++;
+
+  soundVolume = totalSoundVolume / 255;
+
+  Serial.println(soundVolume);
+
+  if (lastPlaces != places) {
+    if (places != 0) {
+      Serial.println("-----------------\n\nattach ticker\n\n------------");
+      sync();
+      //ticker.attach(10, sync);
+    } else {
+      Serial.print("-----------------\n\ndetach ticker\n\n------------");
+      //ticker.detach();
+    }
   }
 
-  int capt1 = adc1.readADC(7); // sound
 
-  Serial.println(capt1);
-  //
-
-  //Serial.println(1024-val);
+  lastPlaces = places;
 
   delay(200);
 }
 
-void syncData(float humidity,
-              int soundVolume,
-              int peopleCount,
-              int windSpeed,
-              float temperature,
-              int raining,
-              int place) {
+void sync() {
+  syncData(humidity,
+           soundVolume,
+           peopleCount,
+           windSpeed,
+           temperature,
+           raining,
+           places);
+}
+
+void syncData(float _humidity,
+              float _soundVolume,
+              int _peopleCount,
+              int _windSpeed,
+              float _temperature,
+              int _raining,
+              int _places) {
 
   Serial.print("connecting to ");
   Serial.println(host);
@@ -128,13 +196,13 @@ void syncData(float humidity,
   Serial.print("Requesting URL: ");
   Serial.println(url);
 
-  String json = "{\"humidity\":" + String(humidity) +
-                ",\"soundVolume\":" + String(soundVolume) +
-                ",\"peopleCount\":" + String(peopleCount) +
-                ",\"windSpeed\":" + String(windSpeed) +
-                ",\"temperature\":" + String(temperature) +
-                ",\"raining\":" + String(raining) +
-                ",\"place\":" + String(place) + "}";
+  String json = "{\"humidity\":" + String(_humidity) +
+                ",\"soundVolume\":" + String(_soundVolume) +
+                ",\"peopleCount\":" + String(_peopleCount) +
+                ",\"windSpeed\":" + String(_windSpeed) +
+                ",\"temperature\":" + String(_temperature) +
+                ",\"raining\":" + String(_raining) +
+                ",\"places\":" + String(_places) + "}";
 
   // This will send the json to the server
   client.println(String("POST ") + url + " HTTP/1.1");
