@@ -9,7 +9,7 @@
 
 #include <Adafruit_MCP3008.h>
 #include "DHT.h"
-#include <Ticker.h>
+//#include <Ticker.h>
 #include <ESP8266WiFi.h>
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
@@ -30,7 +30,7 @@ Adafruit_MCP3008 adc1;
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
-Ticker ticker;
+//Ticker ticker;
 
 const char* ssid     = "Atelier_Hypermedias";
 const char* password = "pas_de_clef_wifi";
@@ -144,7 +144,15 @@ void loop() {
 
   Serial.println(soundVolume);
 
-  if (lastPlaces != places) {
+  if (places !=0) {
+    sync();
+    delay(10000);
+  } else if (places == 0 && lastPlaces != 0) {
+    sync();
+    delay(10000);
+  }
+  
+  /*if (lastPlaces != places) {
     if (places != 0) {
       Serial.println("-----------------\n\nattach ticker\n\n------------");
       sync();
@@ -153,7 +161,7 @@ void loop() {
       Serial.print("-----------------\n\ndetach ticker\n\n------------");
       //ticker.detach();
     }
-  }
+  }*/
 
 
   lastPlaces = places;
